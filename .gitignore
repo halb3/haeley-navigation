@@ -1,0 +1,9 @@
+.git
+node_modules
+package-lock.json
+.DS_Store
+
+.nyc_output
+dist
+test-results
+haeley-navigation-*.tgz
