@@ -1,6 +1,6 @@
 {
     "name": "haeley-navigation",
-    "version": "0.0.0",
+    "version": "0.1.0",
     "license": "MIT",
     "description": "Virtual camera modification techniques for the haeley real-time rendering framework.",
     "author": "Daniel Limberger",
