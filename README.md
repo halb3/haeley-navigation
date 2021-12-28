@@ -1,6 +1,6 @@
 # haeley-navigation
 
-*haeley-navigation* provides algorithms for virtual camera modification using common interaction metaphors, e.g., turntable, trackball, flight, etc.
+*haeley-navigation* provides algorithms for virtual camera modification using common interaction metaphors, e.g., turntable, trackball, firstperson, flight, terrain, etc.
 This library can be used as a standalone dependency, but is developed and intended for [`haeley`](https://github.com/halb3/haeley) real-time rendering framework.
 
 [![npm Version](https://img.shields.io/npm/v/haeley-navigation.svg)](https://www.npmjs.com/package/haeley-navigation)
