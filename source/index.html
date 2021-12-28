@@ -39,10 +39,15 @@
 </body>
 
 <script type="module">
+
+    import * as rxjs from 'rxjs';
+    window['rxjs'] = rxjs;
+
     import * as auxiliaries from 'haeley-auxiliaries';
     import * as math from 'haeley-math';
     import * as navigation from './index.ts';
     window['haeley'] = { auxiliaries, math, navigation };
+
 </script>
 
 <script>

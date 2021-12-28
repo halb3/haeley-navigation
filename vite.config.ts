@@ -23,11 +23,13 @@ export default defineConfig(({ mode }) => {
             sourcemap: 'hidden',
             rollupOptions: {
                 external: [
+                    'rxjs',
                     'haeley-auxiliaries',
                     'haeley-math'
                 ],
                 output: {
                     globals: {
+                        'rxjs': 'rxjs',
                         'haeley-auxiliaries': 'haeley.auxiliaries',
                         'haeley-math': 'haeley.math'
                     }

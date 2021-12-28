@@ -1,0 +1,33 @@
+name: test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Initialize Node.js environment
+        uses: actions/setup-node@v2
+      - name: Check out code
+        uses: actions/checkout@v2
+      - name: Set up dependencies
+        run: npm install
+      - name: Build module
+        run: npm run build
+      - name: Lint module
+        run: npm run lint
+      - name: Test module
+        run: npm run test:nyc
+      - name: Configure coveralls
+        run: 'echo "repo_token: $COVERALLS_REPO_TOKEN" > .coveralls.yml'
+        shell: bash
+        env:
+          COVERALLS_REPO_TOKEN: ${{secrets.COVERALLS_REPO_TOKEN}}
+      - name: Report coverage
+        run: npm run coverage
