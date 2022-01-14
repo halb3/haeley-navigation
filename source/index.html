@@ -20,11 +20,12 @@
 <body>
 
     <section class="container mt-5">
+
         <div class="row justify-content-center">
-            <div class="col-10-sm col-8">
+            <div class="col-12 col-lg-8">
 
                 <h1>haeley-<strong>navigation</strong></h1>
-                <p class="lead">Test Page</p>
+                <p class="lead">Test Page for Development</p>
                 <p>// about:
                     version <code id="version">version</code>,
                     branch <code id="branch">branch</code>,
@@ -34,14 +35,69 @@
             </div>
         </div>
 
+        <div class="row mt-4 justify-content-center">
+            <div class="col-12 col-lg-8 text-start">
+
+                <h2>Camera Modifier</h2>
+                <canvas class="img-fluid" data-clear-color="1.0, 1.0, 1.0, 1.0" id="canvas"></canvas>
+
+                <div class="row justify-content-between">
+                    <div class="col-auto">
+
+                        <div class="btn-group btn-group-sm" role="group" aria-label="Camera Modifier">
+                            <input type="radio" class="btn-check camera-modifier" name="btn-modifier" id="btn-modifier1"
+                                value="turntable" checked>
+                            <label class="btn btn-outline-dark" for="btn-modifier1">'turntable'</label>
+
+                            <input type="radio" class="btn-check camera-modifier" name="btn-modifier" id="btn-modifier2"
+                                value="trackball">
+                            <label class="btn btn-outline-dark" for="btn-modifier2">'trackball'</label>
+
+                            <input type="radio" class="btn-check camera-modifier" name="btn-modifier" id="btn-modifier3"
+                                value="firstperson" disabled>
+                            <label class="btn btn-outline-dark" for="btn-modifier3">'firstperson'</label>
+
+                            <input type="radio" class="btn-check camera-modifier" name="btn-modifier" id="btn-modifier4"
+                                value="flight" disabled>
+                            <label class="btn btn-outline-dark" for="btn-modifier4">'flight'</label>
+
+                            <input type="radio" class="btn-check camera-modifier" name="btn-modifier" id="btn-modifier5"
+                                value="2d-map" disabled>
+                            <label class="btn btn-outline-dark" for="btnradio5">'2d-map'</label>
+
+                            <input type="radio" class="btn-check camera-modifier" name="btn-modifier" id="btn-modifier6"
+                                value="3d-map" disabled>
+                            <label class="btn btn-outline-dark" for="btnradio6">'3d-map'</label>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <button type="button" class="btn btn-sm btn-outline-danger" id="camera-reset">
+                            RESET</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
     </section>
+
+    <footer>
+        <div class="row text-center">
+            <div class="col-12">
+                <p class="mt-5 mb-4">
+                    &copy; 2016&thinsp;&ndash;&thinsp;<span id="cryear"></span>
+                </p>
+            </div>
+        </div>
+    </footer>
 
 </body>
 
+
 <script type="module">
 
-    import * as rxjs from 'rxjs';
-    window['rxjs'] = rxjs;
+    // import * as rxjs from 'rxjs';
+    // window['rxjs'] = rxjs;
 
     import * as auxiliaries from 'haeley-auxiliaries';
     import * as math from 'haeley-math';
@@ -50,6 +106,10 @@
 
 </script>
 
+<script src="https://cdn.jsdelivr.net/npm/rxjs@7.5.2/dist/bundles/rxjs.umd.min.js"
+    integrity="sha256-NxoeMjr0m4GD4L8ovDR551WOTWUtH7cN8FaMZPboUhY=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/webgl-operate@0.7.5/dist/webgl-operate.js"
+    integrity="sha256-ZOLw1iDpm8rAhJOXQOR5QwsWhzsbbVpk0c/SV/TYG5I=" crossorigin="anonymous"></script>
 <script>
     window.onload = () => {
 
@@ -57,10 +117,268 @@
         document.querySelector('#version').innerHTML = haeley.navigation.version();
         document.querySelector('#branch').innerHTML = haeley.navigation.branch();
         document.querySelector('#commit').innerHTML = haeley.navigation.commit();
+        document.querySelector('#cryear').innerHTML = new Date().getFullYear();
 
         console.log("'haeley-navigation' imported:", haeley);
 
+        // initialize
+        const canvas = new gloperate.Canvas('canvas', { antialias: false });
+        canvas.framePrecision = gloperate.Wizard.Precision.byte;
+
+        const renderer = new Renderer();
+        canvas.renderer = renderer;
+
+        const buttons = document.querySelectorAll('.camera-modifier');
+        const navigationSwitch = (event) => {
+            console.log(event.target.value, renderer._navigation.rotationMetaphor);
+            renderer._navigation.rotationMetaphor = event.target.value;
+            renderer.invalidate(true);
+        };
+        buttons.forEach((button) => button.addEventListener('change', navigationSwitch));
+
+        document.querySelector('#camera-reset').addEventListener('click', (event) => {
+            renderer.reset(); /* @todo: add to navigation */
+            renderer.invalidate(true);
+        });
+
+        // expose
+        window['canvas'] = canvas;
+        window['context'] = canvas.context;
+        window['controller'] = canvas.controller;
+        window['renderer'] = renderer;
+
+        return true;
     };
+
+    class Renderer extends gloperate.Renderer {
+
+        cubeProgramSource_vert() {
+            return `
+                precision lowp float;
+
+                layout(location = 0) in vec3 a_vertex;
+                layout(location = 1) in vec2 a_texCoord;
+
+                uniform mat4 u_viewProjection;
+                uniform mat4 u_model;
+
+                out vec4 v_vertex;
+                out vec2 v_uv;
+
+                void main()
+                {
+                    v_vertex = u_model * vec4(a_vertex, 1.0);
+                    v_uv = a_texCoord;
+
+                    gl_Position = u_viewProjection *  v_vertex;
+                }
+            `;
+        }
+
+        cubeProgramSource_frag() {
+            return `
+                precision lowp float;
+
+                layout(location = 0) out vec4 fragColor;
+
+                uniform vec4 u_clearColor;
+                uniform vec4 u_diffuse;
+
+                in vec4 v_vertex;
+                in vec2 v_uv;
+
+                float grid(const in vec3 position, const in float scale) {
+
+                    vec3 v_pos = fract(+position * scale);
+                    vec3 grid0 = smoothstep(vec3(0.0), 1.75 * fwidth(v_pos), v_pos);
+
+                    vec3 v_neg = fract(-position * scale);
+                    vec3 grid1 = smoothstep(vec3(0.0), 1.75 * fwidth(v_neg), v_neg);
+
+                    vec3 intensity = vec3(1.0) - grid0 * grid1;
+
+                    return max(intensity.x, intensity.y) *
+                        max(intensity.y, intensity.z) *
+                        max(intensity.z, intensity.x);
+                }
+
+                void main(void)
+                {
+                    vec3 g = vec3(
+                        grid(v_vertex.xyz,  2.0) * 1.00,
+                        grid(v_vertex.xyz,  4.0) * 0.50,
+                        grid(v_vertex.xyz, 16.0) * 0.25);
+
+                    vec2 uv = v_vertex.xz * 0.125;
+                    float d = 1.0 - dot(uv, uv);
+
+                    float alpha = d * max(g[0], max(g[1], g[2]));
+
+                    vec4 color = mix(u_clearColor, u_diffuse, alpha);
+                    fragColor = vec4(color.rgb, color.a * alpha);
+                }
+            `;
+        }
+
+        reset() {
+            if (this.uninitialized) {
+                return;
+            }
+
+            const vec3 = haeley.math.vec3;
+            this._camera.center = vec3.fromValues(0.0, 0.5, 0.0);
+            this._camera.up = vec3.fromValues(0.0, 1.0, 0.0);
+            this._camera.eye = vec3.fromValues(2.0, 2.0, 4.0);
+            this._camera.near = 0.01;
+            this._camera.far = 32.00;
+        }
+
+        // onInitialize(: Context, : Invalidate, : EventProvider): boolean
+        onInitialize(context, callback, eventProvider) {
+
+            this._defaultFBO = new gloperate.DefaultFramebuffer(context, 'DefaultFBO');
+            this._defaultFBO.initialize();
+            this._defaultFBO.bind();
+
+            const gl = context.gl;
+            const mat4 = haeley.math.mat4;
+
+            this._cuboid = new gloperate.CuboidGeometry(context, 'Cuboid', true, [2.0, 1.0, 2.0]);
+            this._cuboid.initialize();
+            this._cuboidTransform = mat4.fromTranslation(mat4.create(), [0.0, 1.0, 0.0]);
+
+            this._floor = new gloperate.NdcFillingRectangle(context, 'Floor');
+            this._floor.initialize();
+            this._floorTransform = mat4.fromValues(
+                8.0, 0.0, 0.0, 0.0,
+                0.0, 0.0, 8.0, 0.0,
+                0.0, 8.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 1.0
+            );
+
+            const vert = new gloperate.Shader(context, gl.VERTEX_SHADER, 'mesh.vert');
+            vert.initialize(this.cubeProgramSource_vert());
+            const frag = new gloperate.Shader(context, gl.FRAGMENT_SHADER, 'mesh.frag');
+            frag.initialize(this.cubeProgramSource_frag());
+
+            this._program = new gloperate.Program(context, 'CubeProgram');
+            this._program.initialize([vert, frag], false);
+
+            this._program.attribute('a_vertex', this._cuboid.vertexLocation);
+            this._program.attribute('a_texCoord', this._cuboid.uvCoordLocation);
+            this._program.link();
+            this._program.bind();
+
+            this._uViewProjection = this._program.uniform('u_viewProjection');
+            this._uModel = this._program.uniform('u_model');
+            this._uDiffuse = this._program.uniform('u_diffuse');
+
+            this._camera = new haeley.math.Camera();
+            this.reset();
+
+            this._navigation = new haeley.navigation.Navigation(callback, eventProvider);
+            this._navigation.camera = this._camera;
+
+            gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+            return true;
+        }
+
+        // onUninitialize(): void
+        onUninitialize() {
+            super.uninitialize();
+
+            this._cuboid.uninitialize();
+            this._floor.uninitialize();
+            this._program.uninitialize();
+
+            this._defaultFBO.uninitialize();
+        }
+
+        // onDiscarded(): void
+        onDiscarded() {
+            this._altered.alter('canvasSize');
+            this._altered.alter('clearColor');
+        }
+
+        // onUpdate(): boolean
+        onUpdate() {
+            this._navigation.update();
+            return this._altered.any || this._camera.altered;
+        }
+
+        // onPrepare(): void
+        onPrepare() {
+            if (this._altered.canvasSize) {
+                this._camera.aspect = this._canvasSize[0] / this._canvasSize[1];
+                this._camera.viewport = this._canvasSize;
+            }
+            if (this._altered.clearColor) {
+                this._defaultFBO.clearColor(this._clearColor);
+                this._context.gl.uniform4f(this._program.uniform('u_clearColor')
+                    , this._clearColor[0], this._clearColor[1], this._clearColor[2], this._clearColor[3]);
+            }
+            this._altered.reset();
+            this._camera.altered = false;
+        }
+
+        // onFrame(): void
+        onFrame() {
+            const gl = this._context.gl;
+
+            this._defaultFBO.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT, true, false);
+
+            gl.viewport(0, 0, this._canvasSize[0], this._canvasSize[1]);
+
+            gl.enable(gl.DEPTH_TEST);
+            gl.enable(gl.BLEND);
+
+            this._program.bind();
+            gl.uniformMatrix4fv(this._uViewProjection, false, this._camera.viewProjection);
+
+            gl.depthFunc(gl.LEQUAL);
+
+
+            this._floor.bind();
+            gl.uniformMatrix4fv(this._uModel, false, this._floorTransform);
+
+            this._context.gl.uniform4f(this._uDiffuse, 0.5, 0.5, 0.5, 0.25);
+
+            gl.disable(gl.CULL_FACE);
+            gl.depthMask(false);
+            this._floor.draw();
+            gl.depthMask(true);
+            gl.enable(gl.CULL_FACE);
+
+            this._floor.unbind();
+
+
+            this._cuboid.bind();
+            gl.uniformMatrix4fv(this._uModel, false, this._cuboidTransform);
+
+            // this._context.gl.uniform4f(this._uDiffuse, 1.0 - 0.047, 1.0 - 0.933, 1.0 - 0.858, 0.5);
+            // this._context.gl.uniform4f(this._uDiffuse, 0.839 * 0.25, 0.180 * 0.25, 0.654 * 0.25, 0.25);
+            this._context.gl.uniform4f(this._uDiffuse, 0.365, 0.247, 0.827, 0.5);
+            gl.cullFace(gl.FRONT);
+            this._cuboid.draw();
+
+            // this._context.gl.uniform4f(this._uDiffuse, 0.839, 0.180, 0.654, 1.0);
+            this._context.gl.uniform4f(this._uDiffuse, 0.749, 0.250, 0.749, 1.0);
+            gl.cullFace(gl.BACK);
+            this._cuboid.draw();
+
+            this._cuboid.unbind();
+
+
+            this._program.unbind();
+
+            gl.cullFace(gl.BACK);
+            gl.disable(gl.CULL_FACE);
+        }
+
+        // onSwap(): void
+        onSwap() { }
+
+    }
 </script>
 
 <style>
@@ -76,6 +394,12 @@
     code {
         font-weight: 300 !important;
         font-size: 1em;
+        font-family: "Roboto Mono" !important;
+    }
+
+    .btn-outline-dark {
+        font-weight: 300 !important;
+        font-size: 0.875em;
         font-family: "Roboto Mono" !important;
     }
 </style>
