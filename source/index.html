@@ -122,8 +122,9 @@
         console.log("'haeley-navigation' imported:", haeley);
 
         // initialize
-        const canvas = new gloperate.Canvas('canvas', { antialias: false });
+        const canvas = new gloperate.Canvas('canvas');
         canvas.framePrecision = gloperate.Wizard.Precision.byte;
+        canvas.resize();
 
         const renderer = new Renderer();
         canvas.renderer = renderer;
@@ -190,10 +191,10 @@
                 float grid(const in vec3 position, const in float scale) {
 
                     vec3 v_pos = fract(+position * scale);
-                    vec3 grid0 = smoothstep(vec3(0.0), 1.75 * fwidth(v_pos), v_pos);
+                    vec3 grid0 = smoothstep(vec3(0.0), 2.0 * fwidth(v_pos), v_pos);
 
                     vec3 v_neg = fract(-position * scale);
-                    vec3 grid1 = smoothstep(vec3(0.0), 1.75 * fwidth(v_neg), v_neg);
+                    vec3 grid1 = smoothstep(vec3(0.0), 2.0 * fwidth(v_neg), v_neg);
 
                     vec3 intensity = vec3(1.0) - grid0 * grid1;
 
@@ -210,7 +211,7 @@
                         grid(v_vertex.xyz, 16.0) * 0.25);
 
                     vec2 uv = v_vertex.xz * 0.125;
-                    float d = 1.0 - dot(uv, uv);
+                    float d = 1.0 - sqrt(dot(uv, uv));
 
                     float alpha = d * max(g[0], max(g[1], g[2]));
 
@@ -250,9 +251,9 @@
             this._floor = new gloperate.NdcFillingRectangle(context, 'Floor');
             this._floor.initialize();
             this._floorTransform = mat4.fromValues(
-                8.0, 0.0, 0.0, 0.0,
-                0.0, 0.0, 8.0, 0.0,
-                0.0, 8.0, 0.0, 0.0,
+                16.0, 0.0, 0.0, 0.0,
+                0.0, 0.0, 16.0, 0.0,
+                0.0, 16.0, 0.0, 0.0,
                 0.0, 0.0, 0.0, 1.0
             );
 
