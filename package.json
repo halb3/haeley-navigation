@@ -54,8 +54,8 @@
         "vite": "^2.7.6"
     },
     "dependencies": {
-        "haeley-auxiliaries": "^0.2.2",
-        "haeley-math": "^0.1.2",
+        "haeley-auxiliaries": "^0.3.2",
+        "haeley-math": "^0.2.1",
         "rxjs": "^7.5.1"
     },
     "scripts": {

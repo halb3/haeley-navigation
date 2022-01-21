@@ -3,7 +3,8 @@
 
 import { Observable, ReplaySubject } from 'rxjs';
 
-import { assert, bitInBitfield } from 'haeley-auxiliaries';
+import { assert } from 'haeley-auxiliaries';
+import { bitInBitfield } from 'haeley-math';
 
 /* spellchecker: enable */
 
