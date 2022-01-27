@@ -48,7 +48,6 @@ export class FirstPersonModifier extends CameraModifier {
         if (movement === undefined) {
             vec2.subtract(magnitudes, this._initialPoint, this._currentPoint);
         } else {
-            console.log(movement);
             vec2.copy(magnitudes, movement);
         }
         vec2.scale(magnitudes, magnitudes, window.devicePixelRatio * this._sensitivity);
