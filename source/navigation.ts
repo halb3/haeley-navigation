@@ -42,7 +42,7 @@ export class Navigation {
     /**
      * Currently active metaphor.
      */
-    protected _rotationMetaphor: RotationMetaphor;
+    protected _navigationMetaphor: NavigationMetaphor;
 
     /**
      * Identifies the active camera modifier.
@@ -128,7 +128,7 @@ export class Navigation {
             this.onWheel(latests, previous));
 
         /* Explicitly use the setter here to create the appropriate modifier. */
-        this.rotationMetaphor = RotationMetaphor.Turntable;
+        this.navigationMetaphor = NavigationMetaphor.Turntable;
 
         this._pan = new PanModifier();
         this._pinch = new PinchZoomModifier();
@@ -222,9 +222,9 @@ export class Navigation {
         const events = Array.from(this._activeEvents.values());
         const point = this._eventHandler.offsets(events[0])[0];
 
-        switch (this._rotationMetaphor) {
+        switch (this._navigationMetaphor) {
 
-            // case RotationMetaphor.FirstPerson:
+            // case NavigationMetaphor.FirstPerson:
             //     {
             //         const firstPerson = this._firstPerson as FirstPersonModifier;
             //         let movement: vec2 | undefined;
@@ -235,14 +235,14 @@ export class Navigation {
             //     }
             //     break;
 
-            case RotationMetaphor.Trackball:
+            case NavigationMetaphor.Trackball:
                 {
                     const trackball = this._trackball as TrackballModifier;
                     start ? trackball.initiate(point) : trackball.process(point);
                 }
                 break;
 
-            case RotationMetaphor.Turntable:
+            case NavigationMetaphor.Turntable:
                 {
                     const turntable = this._turntable as TurntableModifier;
                     start ? turntable.initiate(point) : turntable.process(point);
@@ -439,8 +439,8 @@ export class Navigation {
     /**
      * Configure this navigation's metaphor.
      */
-    set rotationMetaphor(metaphor: RotationMetaphor) {
-        if (this._rotationMetaphor === metaphor) {
+    set navigationMetaphor(metaphor: NavigationMetaphor) {
+        if (this._navigationMetaphor === metaphor) {
             return;
         }
 
@@ -451,10 +451,10 @@ export class Navigation {
         this._eventHandler.exitPointerLock(); /* Might be requested (and active) from FirstPerson or Flight. */
         this._alwaysRotateOnMove = false;
 
-        this._rotationMetaphor = metaphor;
-        switch (this._rotationMetaphor) {
+        this._navigationMetaphor = metaphor;
+        switch (this._navigationMetaphor) {
 
-            // case RotationMetaphor.FirstPerson:
+            // case NavigationMetaphor.FirstPerson:
 
             //     this._eventHandler.requestPointerLock();
             //     this._alwaysRotateOnMove = true;
@@ -463,12 +463,12 @@ export class Navigation {
             //     this._firstPerson.camera = this._camera;
             //     break;
 
-            case RotationMetaphor.Trackball:
+            case NavigationMetaphor.Trackball:
                 this._trackball = new TrackballModifier();
                 this._trackball.camera = this._camera;
                 break;
 
-            case RotationMetaphor.Turntable:
+            case NavigationMetaphor.Turntable:
                 this._turntable = new TurntableModifier();
                 this._turntable.camera = this._camera;
                 break;
@@ -479,8 +479,8 @@ export class Navigation {
         this._invalidate(true);
     }
 
-    get rotationMetaphor(): RotationMetaphor {
-        return this._rotationMetaphor;
+    get navigationMetaphor(): NavigationMetaphor {
+        return this._navigationMetaphor;
     }
 
 }
@@ -506,7 +506,7 @@ export enum NavigationModes {
 /**
  * Navigation metaphors supported by the default navigation implementation.
  */
-export enum RotationMetaphor {
+export enum NavigationMetaphor {
     // FirstPerson = 'firstperson',
     // Flight = 'flight',
     Trackball = 'trackball',

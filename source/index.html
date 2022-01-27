@@ -131,8 +131,8 @@
 
         const buttons = document.querySelectorAll('.camera-modifier');
         const navigationSwitch = (event) => {
-            console.log(event.target.value, renderer._navigation.rotationMetaphor);
-            renderer._navigation.rotationMetaphor = event.target.value;
+            console.log(event.target.value, renderer._navigation.navigationMetaphor);
+            renderer._navigation.navigationMetaphor = event.target.value;
             renderer.invalidate(true);
         };
         buttons.forEach((button) => button.addEventListener('change', navigationSwitch));
