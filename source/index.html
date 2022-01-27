@@ -5,7 +5,7 @@
 <head>
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-widthinitial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>undefined</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
         integrity="sha256-YvdLHPgkqJ8DVUxjjnGVlMMJtNimJ6dYkowFFvp4kKs=" crossorigin="anonymous">
@@ -351,7 +351,6 @@
         onPrepare() {
             if (this._altered.frameSize) {
                 this._intermediateFBO.resize(this._frameSize[0], this._frameSize[1]);
-                this._camera.viewport = this._canvasSize;
             }
             if (this._altered.canvasSize) {
                 this._camera.aspect = this._canvasSize[0] / this._canvasSize[1];
@@ -442,8 +441,10 @@
 
         // onSwap(): void
         onSwap() {
-            this._blit.framebuffer = this._accumulate.framebuffer ?
-                this._accumulate.framebuffer : this._intermediateFBO;
+            if (!this._accumulate.initialized || !this._accumulate.framebuffer.initialized) {
+                return;
+            }
+            this._blit.framebuffer = this._accumulate.framebuffer;
             this._blit.frame();
         }
 
