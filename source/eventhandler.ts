@@ -11,6 +11,7 @@ import { vec2 } from 'haeley-math';
 import { MouseEventProvider, MouseEventType } from './mouseeventprovider';
 import { PointerEventProvider, PointerEventType } from './pointereventprovider';
 import { TouchEventProvider, TouchEventType } from './toucheventprovider';
+import { KeyboardEventProvider, KeyboardEventType } from './keyboardeventprovider';
 
 /* spellchecker: enable */
 
@@ -18,6 +19,7 @@ import { TouchEventProvider, TouchEventType } from './toucheventprovider';
 export interface EventProvider {
     pointerEventProvider?: PointerEventProvider;
     mouseEventProvider?: MouseEventProvider;
+    keyboardEventProvider?: KeyboardEventProvider;
     // eyeGazeEventProvider?: EyeGazeEventProvider;
 }
 
@@ -35,6 +37,12 @@ export interface TouchEventHandler { (latests: Array<TouchEvent>, previous: Arra
  * Callback for handling pointer events, given the latest touch events (since last update) as well as the previous.
  */
 export interface PointerEventHandler { (latests: Array<PointerEvent>, previous: Array<PointerEvent>): void; }
+
+/**
+ * Callback for handling keyboard events, given the latest keyboard events (since last update) as well as the previous.
+ */
+export interface KeyboardEventHandler { (latests: Array<KeyboardEvent>, previous: Array<KeyboardEvent>): void; }
+
 
 // /**
 //  * Callback for handling eye gaze events, given the latest eye gaze events (since last update) as well as the previous.
@@ -78,6 +86,11 @@ export class EventHandler {
      */
     protected _pointerEventProvider: PointerEventProvider | undefined;
 
+    /**
+     * Assigned pointer event provider. This is usually created and owned by the canvas.
+     */
+    protected _keyboardEventProvider: KeyboardEventProvider | undefined;
+
     // /**
     //  * Assigned eye gaze event provider. This is usually created and owned by the eye gaze data stream.
     //  */
@@ -105,6 +118,13 @@ export class EventHandler {
     protected _pointerEventHandlerByType =
         new Map<PointerEventType, Array<PointerEventHandler>>();
 
+    protected _latestKeyboardEventsByType =
+        new Map<KeyboardEventType, Array<KeyboardEvent>>();
+    protected _previousKeyboardEventsByType =
+        new Map<KeyboardEventType, Array<KeyboardEvent>>();
+    protected _keyboardEventHandlerByType =
+        new Map<KeyboardEventType, Array<KeyboardEventHandler>>();
+
     // protected _latestEyeGazeEventsByType =
     //     new Map<EyeGazeEventType, Array<EyeGazeEvent>>();
     // protected _previousEyeGazeEventsByType =
@@ -123,6 +143,7 @@ export class EventHandler {
         }
 
         this._pointerEventProvider = eventProvider.pointerEventProvider;
+        this._keyboardEventProvider = eventProvider.keyboardEventProvider;
         // this._eyeGazeEventProvider = eventProvider.eyeGazeEventProvider;
     }
 
@@ -190,7 +211,7 @@ export class EventHandler {
 
     /**
      * Utility for registering an additional touch event handler for updates on touch events of the given type. The
-     * handler is to be called on update iff at least a single touch event of the given type has occurred since last
+     * handler is to be called on update if at least a single touch event of the given type has occurred since last
      * update.
      * @param type - Touch event type the handler is to be associated with.
      * @param handler - Handler to be called on update.
@@ -234,7 +255,7 @@ export class EventHandler {
 
     /**
      * Utility for registering an additional pointer event handler for updates on pointer events of the given type. The
-     * handler is to be called on update iff at least a single touch event of the given type has occurred since last
+     * handler is to be called on update if at least a single touch event of the given type has occurred since last
      * update.
      * @param type - Pointer event type the handler is to be associated with.
      * @param handler - Handler to be called on update.
@@ -276,9 +297,53 @@ export class EventHandler {
         latest.length = 0;
     }
 
+    /**
+     * Utility for registering an additional keyboard event handler for updates on keyboard events of the given type. The
+     * handler is to be called on update if at least a single keyboard event of the given type has occurred since last
+     * update.
+     * @param type - Keyboard event type the handler is to be associated with.
+     * @param handler - Handler to be called on update.
+     */
+    protected pushKeyboardEventHandler(type: KeyboardEventType, handler: KeyboardEventHandler): void {
+        if (this._keyboardEventHandlerByType.has(type)) {
+            (this._keyboardEventHandlerByType.get(type) as Array<KeyboardEventHandler>).push(handler);
+            return;
+        }
+
+        this._keyboardEventHandlerByType.set(type, new Array<KeyboardEventHandler>());
+
+        this._previousKeyboardEventsByType.set(type, new Array<KeyboardEvent>());
+        const latest = new Array<KeyboardEvent>();
+        this._latestKeyboardEventsByType.set(type, latest);
+
+        assert(this._keyboardEventProvider !== undefined, `expected valid keyboard event provider`);
+        const observable = (this._keyboardEventProvider as KeyboardEventProvider).observable(type);
+
+        this._subscriptions.push((observable as Observable<KeyboardEvent>).subscribe(
+            (event) => { latest.push(event); this.invalidate(); }));
+
+        (this._keyboardEventHandlerByType.get(type) as Array<KeyboardEventHandler>).push(handler);
+    }
+
+    protected invokeKeyboardEventHandler(type: KeyboardEventType): void {
+        const handlers = this._keyboardEventHandlerByType.get(type);
+        if (handlers === undefined || handlers.length === 0) {
+            return;
+        }
+        const latest = this._latestKeyboardEventsByType.get(type) as Array<KeyboardEvent>;
+        if (latest.length === 0) {
+            return;
+        }
+        const previous = this._previousKeyboardEventsByType.get(type) as Array<KeyboardEvent>;
+        handlers.forEach((handler) => handler(latest, previous));
+
+        Object.assign(previous, latest);
+        latest.length = 0;
+    }
+
     // /**
     //  * Utility for registering an additional touch event handler for updates on touch events of the given type. The
-    //  * handler is to be called on update iff at least a single touch event of the given type has occurred since last
+    //  * handler is to be called on update if at least a single touch event of the given type has occurred since last
     //  * update.
     //  * @param type - Touch event type the handler is to be associated with.
     //  * @param handler - Handler to be called on update.
@@ -330,6 +395,8 @@ export class EventHandler {
         this._previousTouchEventsByType.forEach((value) => value.length = 0);
         this._latestPointerEventsByType.forEach((value) => value.length = 0);
         this._previousPointerEventsByType.forEach((value) => value.length = 0);
+        this._latestKeyboardEventsByType.forEach((value) => value.length = 0);
+        this._previousKeyboardEventsByType.forEach((value) => value.length = 0);
         // this._previousEyeGazeEventsByType.forEach((value) => value.length = 0);
         // this._latestEyeGazeEventsByType.forEach((value) => value.length = 0);
 
@@ -362,6 +429,10 @@ export class EventHandler {
         this.invokePointerEventHandler(PointerEventType.Up);
         this.invokePointerEventHandler(PointerEventType.Leave);
         this.invokePointerEventHandler(PointerEventType.Cancel);
+
+        this.invokeKeyboardEventHandler(KeyboardEventType.KeyDown);
+        this.invokeKeyboardEventHandler(KeyboardEventType.KeyPress);
+        this.invokeKeyboardEventHandler(KeyboardEventType.KeyUp);
 
         // this.invokeEyeGazeEventHandler(EyeGazeEventType.EyeGazeData);
         // this.invokeEyeGazeEventHandler(EyeGazeEventType.NewServerMessage);
@@ -436,7 +507,7 @@ export class EventHandler {
 
 
     /**
-     * Register a click event handler that is to be called on update iff at least a single click event has
+     * Register a click event handler that is to be called on update if at least a single click event has
      * occurred since last update.
      * @param handler - Handler to be called on update.
      */
@@ -445,7 +516,7 @@ export class EventHandler {
     }
 
     /**
-     * Register an mouse enter event handler that is to be called on update iff at least a single mouse enter event has
+     * Register an mouse enter event handler that is to be called on update if at least a single mouse enter event has
      * occurred since last update.
      * @param handler - Handler to be called on update.
      */
@@ -454,7 +525,7 @@ export class EventHandler {
     }
 
     /**
-     * Register an mouse leave event handler that is to be called on update iff at least a single mouse leave event has
+     * Register an mouse leave event handler that is to be called on update if at least a single mouse leave event has
      * occurred since last update.
      * @param handler - Handler to be called on update.
      */
@@ -463,7 +534,7 @@ export class EventHandler {
     }
 
     /**
-     * Register an mouse down event handler that is to be called on update iff at least a single mouse down event has
+     * Register an mouse down event handler that is to be called on update if at least a single mouse down event has
      * occurred since last update.
      * @param handler - Handler to be called on update.
      */
@@ -472,7 +543,7 @@ export class EventHandler {
     }
 
     /**
-     * Register an mouse up event handler that is to be called on update iff at least a single mouse up event has
+     * Register an mouse up event handler that is to be called on update if at least a single mouse up event has
      * occurred since last update.
      * @param handler - Handler to be called on update.
      */
@@ -481,7 +552,7 @@ export class EventHandler {
     }
 
     /**
-     * Register an mouse move event handler that is to be called on update iff at least a single mouse move event has
+     * Register an mouse move event handler that is to be called on update if at least a single mouse move event has
      * occurred since last update.
      * @param handler - Handler to be called on update.
      */
@@ -490,7 +561,7 @@ export class EventHandler {
     }
 
     /**
-     * Register an mouse wheel event handler that is to be called on update iff at least a single mouse wheel event has
+     * Register an mouse wheel event handler that is to be called on update if at least a single mouse wheel event has
      * occurred since last update.
      * @param handler - Handler to be called on update.
      */
@@ -499,7 +570,7 @@ export class EventHandler {
     }
 
     /**
-     * Register a touch start event handler that is to be called on update iff at least a single touch start event has
+     * Register a touch start event handler that is to be called on update if at least a single touch start event has
      * occurred since last update.
      * @param handler - Handler to be called on update.
      */
@@ -508,7 +579,7 @@ export class EventHandler {
     }
 
     /**
-     * Register a touch end event handler that is to be called on update iff at least a single touch end event has
+     * Register a touch end event handler that is to be called on update if at least a single touch end event has
      * occurred since last update.
      * @param handler - Handler to be called on update.
      */
@@ -517,7 +588,7 @@ export class EventHandler {
     }
 
     /**
-     * Register a touch move event handler that is to be called on update iff at least a single touch move event has
+     * Register a touch move event handler that is to be called on update if at least a single touch move event has
      * occurred since last update.
      * @param handler - Handler to be called on update.
      */
@@ -526,7 +597,7 @@ export class EventHandler {
     }
 
     /**
-     * Register a touch cancel event handler that is to be called on update iff at least a single touch cancel event has
+     * Register a touch cancel event handler that is to be called on update if at least a single touch cancel event has
      * occurred since last update.
      * @param handler - Handler to be called on update.
      */
@@ -535,7 +606,7 @@ export class EventHandler {
     }
 
     /**
-     * Register a pointer up event handler that is to be called on update iff at least a single touch cancel event has
+     * Register a pointer up event handler that is to be called on update if at least a single touch cancel event has
      * occurred since last update.
      * @param handler - Handler to be called on update.
      */
@@ -544,7 +615,7 @@ export class EventHandler {
     }
 
     /**
-     * Register a pointer down event handler that is to be called on update iff at least a single touch cancel event has
+     * Register a pointer down event handler that is to be called on update if at least a single touch cancel event has
      * occurred since last update.
      * @param handler - Handler to be called on update.
      */
@@ -553,7 +624,7 @@ export class EventHandler {
     }
 
     /**
-     * Register a pointer enter event handler that is to be called on update iff at least a single touch cancel event
+     * Register a pointer enter event handler that is to be called on update if at least a single touch cancel event
      * has occurred since last update.
      * @param handler - Handler to be called on update.
      */
@@ -562,7 +633,7 @@ export class EventHandler {
     }
 
     /**
-     * Register a pointer leave event handler that is to be called on update iff at least a single touch cancel event
+     * Register a pointer leave event handler that is to be called on update if at least a single touch cancel event
      * has occurred since last update.
      * @param handler - Handler to be called on update.
      */
@@ -571,7 +642,7 @@ export class EventHandler {
     }
 
     /**
-     * Register a pointer move event handler that is to be called on update iff at least a single touch cancel event has
+     * Register a pointer move event handler that is to be called on update if at least a single touch cancel event has
      * occurred since last update.
      * @param handler - Handler to be called on update.
      */
@@ -580,12 +651,39 @@ export class EventHandler {
     }
 
     /**
-     * Register a pointer cancel event handler that is to be called on update iff at least a single touch cancel event
+     * Register a pointer cancel event handler that is to be called on update if at least a single touch cancel event
      * has occurred since last update.
      * @param handler - Handler to be called on update.
      */
     pushPointerCancelHandler(handler: PointerEventHandler): void {
         this.pushPointerEventHandler(PointerEventType.Cancel, handler);
+    }
+
+    /**
+     * Register a key down event handler that is to be called on update if at least a single key down event has
+     * occurred since last update.
+     * @param handler - Handler to be called on update.
+     */
+    pushKeyDownHandler(handler: KeyboardEventHandler): void {
+        this.pushKeyboardEventHandler(KeyboardEventType.KeyDown, handler);
+    }
+
+    /**
+     * Register a key press event handler that is to be called on update if at least a single key press event has
+     * occurred since last update.
+     * @param handler - Handler to be called on update.
+     */
+    pushKeyPressHandler(handler: KeyboardEventHandler): void {
+        this.pushKeyboardEventHandler(KeyboardEventType.KeyPress, handler);
+    }
+
+    /**
+     * Register a key up event handler that is to be called on update if at least a single key up event has
+     * occurred since last update.
+     * @param handler - Handler to be called on update.
+     */
+    pushKeyUpHandler(handler: KeyboardEventHandler): void {
+        this.pushKeyboardEventHandler(KeyboardEventType.KeyUp, handler);
     }
 
     // /**
