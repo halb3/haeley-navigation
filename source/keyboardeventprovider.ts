@@ -6,8 +6,6 @@ import { Observable, ReplaySubject } from 'rxjs';
 import { assert } from 'haeley-auxiliaries';
 import { bitInBitfield } from 'haeley-math';
 
-import { PointerLock } from './pointerlock';
-
 /* spellchecker: enable */
 
 
@@ -32,9 +30,6 @@ export class KeyboardEventProvider {
     protected _keyUpListener: { (event: KeyboardEvent): void };
     protected _keyUpSubject: ReplaySubject<KeyboardEvent>;
 
-    /** @see {@link pointerLock} */
-    protected _pointerLockRequestPending = false;
-
     /**
      * This mask saves for which types of events, event.preventDefault should be called. This is useful to disallow
      * some kinds of standard events.
@@ -47,19 +42,6 @@ export class KeyboardEventProvider {
         this._timeframe = timeframe;
 
         // Add pointer lock stuff if needed. Not sure yet if theres any events we need to watch out for
-    }
-
-    /**
-     * The pointer lock API requires a little workaround in order to avoid something like '... not called from inside a
-     * short running user-generated event handler'. A click event listener is registered and whenever a pointer lock is
-     * requested, e.g., from an event handler (which in turn exposes this interface to, e.g., a navigation), the next
-     * click will result in a probably more successful pointer lock.
-     */
-    protected processPointerLockRequests(): void {
-        if (!this._pointerLockRequestPending) {
-            return;
-        }
-        PointerLock.request(this._element);
     }
 
     /**
@@ -109,21 +91,6 @@ export class KeyboardEventProvider {
             default:
                 return undefined;
         }
-    }
-
-    /**
-     * Enable/disable pointer lock on click. If true, the next click on this event provider's canvas will invoke a
-     * pointer lock request on the canvas element.
-     */
-    set pointerLock(lock: boolean) {
-        this._pointerLockRequestPending = lock;
-        if (lock === false) {
-            this._pointerLockRequestPending = false;
-            PointerLock.exit();
-        }
-    }
-    get pointerLock(): boolean {
-        return PointerLock.active(this._element);
     }
 
     get keyDown$(): Observable<KeyboardEvent> {

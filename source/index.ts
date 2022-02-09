@@ -28,6 +28,7 @@ export * from './wheelzoommodifier';
 export * from './mouseeventprovider';
 export * from './pointereventprovider';
 export * from './toucheventprovider';
+export * from './keyboardeventprovider';
 
 /* Event-based Navigation */
 

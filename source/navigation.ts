@@ -127,6 +127,14 @@ export class Navigation {
         this._eventHandler.pushMouseWheelHandler((latests: Array<WheelEvent>, previous: Array<WheelEvent>) =>
             this.onWheel(latests, previous));
 
+        /* Listen to keyboard events. */
+        this._eventHandler.pushKeyDownHandler((latests: Array<KeyboardEvent>, previous: Array<KeyboardEvent>) =>
+            this.onKeyDown(latests, previous));
+        this._eventHandler.pushKeyUpHandler((latests: Array<KeyboardEvent>, previous: Array<KeyboardEvent>) =>
+            this.onKeyUp(latests, previous));
+        this._eventHandler.pushKeyPressHandler((latests: Array<KeyboardEvent>, previous: Array<KeyboardEvent>) =>
+            this.onKeyPress(latests, previous));
+
         /* Explicitly use the setter here to create the appropriate modifier. */
         this.navigationMetaphor = NavigationMetaphor.Turntable;
 
@@ -399,6 +407,18 @@ export class Navigation {
     protected onWheel(latests: Array<WheelEvent>, previous: Array<WheelEvent>): void {
         const event = latests[0];
         this._wheelZoom.process(event.deltaY);
+    }
+
+    protected onKeyDown(latests: Array<KeyboardEvent>, previous: Array<KeyboardEvent>): void {
+        // I don't know what to do here, yet, cause I get errors until here
+    }
+
+    protected onKeyUp(latests: Array<KeyboardEvent>, previous: Array<KeyboardEvent>): void {
+        // I don't know what to do here, yet, cause I get errors until here
+    }
+
+    protected onKeyPress(latests: Array<KeyboardEvent>, previous: Array<KeyboardEvent>): void {
+        // I don't know what to do here, yet, cause I get errors until here
     }
 
 
