@@ -172,7 +172,8 @@ export class Navigation {
         //     isTouchEvent = touchEvent.touches !== undefined && touchEvent.touches.length > 0;
         // }
 
-        const isPointerLockedRotate = PointerLock.active() && this._alwaysRotateOnMove;
+        console.log('locked?', this._eventHandler.pointerLocked());
+        const isPointerLockedRotate = this._eventHandler.pointerLocked() && this._alwaysRotateOnMove;
         const numPointers = this._activeEvents.size;
 
         const isMouseRotate = isMouseEvent && isPrimaryButtonDown && numPointers === 1;
@@ -182,7 +183,7 @@ export class Navigation {
         const isMultiTouch = isTouchEvent && numPointers === 2;
 
         if (isPointerLockedRotate) {
-            return NavigationModes.Rotate;
+            return NavigationModes.WalkForward;
         }
 
         if (isMousePan) {
@@ -232,16 +233,14 @@ export class Navigation {
 
         switch (this._navigationMetaphor) {
 
-            // case NavigationMetaphor.FirstPerson:
-            //     {
-            //         const firstPerson = this._firstPerson as FirstPersonModifier;
-            //         let movement: vec2 | undefined;
-            //         if (PointerLock.active() && event instanceof MouseEvent) {
-            //             movement = vec2.fromValues((event as MouseEvent).movementX, (event as MouseEvent).movementY);
-            //         }
-            //         start ? firstPerson.initiate(point) : firstPerson.process(point, movement);
-            //     }
-            //     break;
+            case NavigationMetaphor.FirstPerson:
+                {
+                    const firstPerson = this._firstPerson as FirstPersonModifier;
+                    point[0] = events[0].movementX;
+                    point[1] = events[0].movementY;
+                    start ? firstPerson.initiate(point) : firstPerson.process(point);
+                }
+                break;
 
             case NavigationMetaphor.Trackball:
                 {
@@ -290,6 +289,16 @@ export class Navigation {
 
         const pinch = this._pinch as PinchZoomModifier;
         start ? pinch.initiate(point1, point2) : pinch.process(point1, point2);
+    }
+
+    protected walk(moep: number): void {
+        // moep stuff todo ...
+        const firstPerson = this._firstPerson;
+        if (firstPerson === undefined) {
+            return;
+        }
+
+        firstPerson.walk(moep * 0.1);
     }
 
     protected getPrimaryEvent(events: Array<PointerEvent>): PointerEvent | undefined {
@@ -411,10 +420,22 @@ export class Navigation {
 
     protected onKeyDown(latests: Array<KeyboardEvent>, previous: Array<KeyboardEvent>): void {
         // I don't know what to do here, yet, cause I get errors until here
+        switch (this._mode) {
+            case NavigationModes.WalkForward:
+
+                if (latests[0].key === 'w')
+                    this.walk(+1);
+                else if (latests[0].key === 's')
+                    this.walk(-1);
+                break;
+            default:
+                break;
+        }
     }
 
     protected onKeyUp(latests: Array<KeyboardEvent>, previous: Array<KeyboardEvent>): void {
         // I don't know what to do here, yet, cause I get errors until here
+        console.log('keyUp', latests);
     }
 
     protected onKeyPress(latests: Array<KeyboardEvent>, previous: Array<KeyboardEvent>): void {
@@ -474,14 +495,14 @@ export class Navigation {
         this._navigationMetaphor = metaphor;
         switch (this._navigationMetaphor) {
 
-            // case NavigationMetaphor.FirstPerson:
+            case NavigationMetaphor.FirstPerson:
 
-            //     this._eventHandler.requestPointerLock();
-            //     this._alwaysRotateOnMove = true;
+                this._eventHandler.requestPointerLock();
+                this._alwaysRotateOnMove = true;
 
-            //     this._firstPerson = new FirstPersonModifier();
-            //     this._firstPerson.camera = this._camera;
-            //     break;
+                this._firstPerson = new FirstPersonModifier();
+                this._firstPerson.camera = this._camera;
+                break;
 
             case NavigationMetaphor.Trackball:
                 this._trackball = new TrackballModifier();
@@ -521,13 +542,19 @@ export enum NavigationModes {
     Rotate,
     Zoom,
     ZoomStep,
+    /**
+     * @todo we should detach the different navigation mappings for the different modifier
+     * e.g., a firstperson navigation has distinct navigation modes, e.g., walk, stop, lean left, etc...
+     * The Event bindings to all of these different modes should be handled by specialized classes.
+     */
+    WalkForward,
 }
 
 /**
  * Navigation metaphors supported by the default navigation implementation.
  */
 export enum NavigationMetaphor {
-    // FirstPerson = 'firstperson',
+    FirstPerson = 'firstperson',
     // Flight = 'flight',
     Trackball = 'trackball',
     Turntable = 'turntable',

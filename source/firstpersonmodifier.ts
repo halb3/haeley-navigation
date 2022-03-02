@@ -30,10 +30,29 @@ export class FirstPersonModifier extends CameraModifier {
      * @param point - Position of the current event to start the modification at.
      */
     initiate(point: vec2): void {
+        // Object.assign(this._reference, this._camera);
+
+        // /* Retrieve initial event position. */
+        // this._initialPoint = point;
+    }
+
+    walk(moep: number): void {
+
+        if (this._camera === undefined) {
+            return;
+        }
+
+        const T = mat4.fromTranslation(m4(), vec3.fromValues(0.0, 0.0, moep));
+
+        const eye = vec3.transformMat4(v3(), this._reference.eye, T);
+        const center = vec3.transformMat4(v3(), this._reference.center, T);
+
+        this._camera.eye = eye;
+        this._camera.center = center;
+
         Object.assign(this._reference, this._camera);
 
-        /* Retrieve initial event position. */
-        this._initialPoint = point;
+        this._camera
     }
 
     /**
@@ -41,28 +60,28 @@ export class FirstPersonModifier extends CameraModifier {
      * @param point - Position of the current event used to update the yaw and pitch.
      */
     process(point: vec2, movement?: vec2): void {
-        /* Current event position is always the same as initial, when pointer lock is active. */
-        this._currentPoint = point;
+        // /* Current event position is always the same as initial, when pointer lock is active. */
+        // this._currentPoint = point;
 
-        const magnitudes = vec2.create();
-        if (movement === undefined) {
-            vec2.subtract(magnitudes, this._initialPoint, this._currentPoint);
-        } else {
-            vec2.copy(magnitudes, movement);
-        }
-        vec2.scale(magnitudes, magnitudes, window.devicePixelRatio * this._sensitivity);
+        // const magnitudes = vec2.create();
+        // if (movement === undefined) {
+        //     vec2.subtract(magnitudes, this._initialPoint, this._currentPoint);
+        // } else {
+        //     vec2.copy(magnitudes, movement);
+        // }
+        // vec2.scale(magnitudes, magnitudes, window.devicePixelRatio * this._sensitivity);
 
-        /* Difference between two subsequent events, thus, initial position is reset. */
-        vec2.copy(this._initialPoint, this._currentPoint);
+        // /* Difference between two subsequent events, thus, initial position is reset. */
+        // vec2.copy(this._initialPoint, this._currentPoint);
 
-        const centerToEye = vec3.sub(v3(), this._reference.eye, this._reference.center);
-        vec3.normalize(centerToEye, centerToEye);
-        const strafe = vec3.cross(v3(), centerToEye, this._reference.up);
+        // const centerToEye = vec3.sub(v3(), this._reference.eye, this._reference.center);
+        // vec3.normalize(centerToEye, centerToEye);
+        // const strafe = vec3.cross(v3(), centerToEye, this._reference.up);
 
-        const yaw = mat4.fromRotation(m4(), -magnitudes[0], this._reference.up);
-        const pitch = mat4.fromRotation(m4(), magnitudes[1], strafe);
+        // const yaw = mat4.fromRotation(m4(), -magnitudes[0], this._reference.up);
+        // const pitch = mat4.fromRotation(m4(), magnitudes[1], strafe);
 
-        mat4.mul(this._rotation, pitch, yaw);
+        // mat4.mul(this._rotation, pitch, yaw);
 
         this.update();
     }
@@ -75,20 +94,20 @@ export class FirstPersonModifier extends CameraModifier {
             return;
         }
 
-        const T = mat4.fromTranslation(m4(), this._reference.eye);
-        mat4.multiply(T, T, this._rotation);
-        mat4.translate(T, T, vec3.negate(v3(), this._reference.eye));
+        // const T = mat4.fromTranslation(m4(), this._reference.eye);
+        // mat4.multiply(T, T, this._rotation);
+        // mat4.translate(T, T, vec3.negate(v3(), this._reference.eye));
 
-        // const up = vec3.transformMat4(v3(), [0.0, 1.0, 0.0], this._rotation);
-        // const eye = vec3.transformMat4(v3(), this._reference.eye, T);
-        const center = vec3.transformMat4(v3(), this._reference.center, T);
+        // // const up = vec3.transformMat4(v3(), [0.0, 1.0, 0.0], this._rotation);
+        // // const eye = vec3.transformMat4(v3(), this._reference.eye, T);
+        // const center = vec3.transformMat4(v3(), this._reference.center, T);
 
 
-        // this._camera.up = up;
-        // this._camera.eye = eye;
-        this._camera.center = center;
+        // // this._camera.up = up;
+        // // this._camera.eye = eye;
+        // this._camera.center = center;
 
-        Object.assign(this._reference, this._camera);
+        // Object.assign(this._reference, this._camera);
     }
 
 

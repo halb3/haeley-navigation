@@ -732,6 +732,10 @@ export class EventHandler {
         }
     }
 
+    pointerLocked(): boolean {
+        return this._mouseEventProvider ? this._mouseEventProvider.pointerLock : false;
+    }
+
     /**
      * Forward pointer lock release request to the mouse event provider (if one exists).
      */

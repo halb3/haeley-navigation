@@ -54,7 +54,7 @@
                             <label class="btn btn-outline-dark" for="btn-modifier2">'trackball'</label>
 
                             <input type="radio" class="btn-check camera-modifier" name="btn-modifier" id="btn-modifier3"
-                                value="firstperson" disabled>
+                                value="firstperson">
                             <label class="btn btn-outline-dark" for="btn-modifier3">'firstperson'</label>
 
                             <input type="radio" class="btn-check camera-modifier" name="btn-modifier" id="btn-modifier4"
@@ -125,6 +125,9 @@
         const canvas = new gloperate.Canvas('canvas');
         canvas.controller.multiFrameNumber = 8;
         canvas.framePrecision = gloperate.Wizard.Precision.half;
+
+        canvas.element.setAttribute('tabindex', 1); // @todo: will be a helper function in haeley canvas soon
+
 
         const renderer = new Renderer();
         canvas.renderer = renderer;
