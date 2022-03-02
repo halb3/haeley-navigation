@@ -1,7 +1,7 @@
 
 /* spellchecker: disable */
 
-import { assert } from 'haeley-auxiliaries';
+import { assert } from '@haeley/auxiliaries';
 
 /* spellchecker: enable */
 

@@ -1,4 +1,5 @@
 
+import { existsSync } from 'fs';
 import { resolve } from 'path';
 import git from 'git-rev-sync';
 
@@ -8,6 +9,7 @@ import { defineConfig, UserConfigExport } from 'vite';
 const root = resolve(__dirname, 'source');
 const outDir = resolve(__dirname, 'dist');
 
+const gitExists = existsSync(resolve(__dirname, '.git'))
 
 export default defineConfig(({ mode }) => {
 
@@ -17,28 +19,28 @@ export default defineConfig(({ mode }) => {
             outDir,
             lib: {
                 entry: resolve(root, 'index.ts'),
-                name: 'haeley-navigation',
+                name: 'haeley.navigation',
                 formats: ['cjs', 'umd', 'es'],
             },
             sourcemap: 'hidden',
             rollupOptions: {
                 external: [
                     'rxjs',
-                    'haeley-auxiliaries',
-                    'haeley-math'
+                    '@haeley/auxiliaries',
+                    '@haeley/math'
                 ],
                 output: {
                     globals: {
                         'rxjs': 'rxjs',
-                        'haeley-auxiliaries': 'haeley.auxiliaries',
-                        'haeley-math': 'haeley.math'
+                        '@haeley/auxiliaries': 'haeley.auxiliaries',
+                        '@haeley/math': 'haeley.math'
                     }
                 }
             }
         },
         define: {
-            __GIT_COMMIT__: JSON.stringify(git.short(__dirname)),
-            __GIT_BRANCH__: JSON.stringify(git.branch(__dirname)),
+            __GIT_COMMIT__: JSON.stringify(gitExists ? git.short(__dirname) : undefined),
+            __GIT_BRANCH__: JSON.stringify(gitExists ? git.branch(__dirname) : undefined),
             __LIB_NAME__: JSON.stringify(process.env.npm_package_name),
             __LIB_VERSION__: JSON.stringify(process.env.npm_package_version),
         },
@@ -57,6 +59,6 @@ export default defineConfig(({ mode }) => {
             break;
     }
 
-    console.log(config);
+    // console.log(config);
     return config;
 });

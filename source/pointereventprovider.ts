@@ -3,8 +3,8 @@
 
 import { Observable, ReplaySubject } from 'rxjs';
 
-import { assert, msagent } from 'haeley-auxiliaries';
-import { bitInBitfield } from 'haeley-math';
+import { assert, msagent } from '@haeley/auxiliaries';
+import { bitInBitfield } from '@haeley/math';
 
 import { PointerLock } from './pointerlock';
 

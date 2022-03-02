@@ -1,7 +1,7 @@
 
 /* spellchecker: disable */
 
-import { mat4, m4, vec2, v2, vec3, v3 } from 'haeley-math';
+import { mat4, m4, vec2, v2, vec3, v3 } from '@haeley/math';
 
 import { CameraModifier } from './cameramodifier';
 
@@ -61,6 +61,7 @@ export class TurntableModifier extends CameraModifier {
         this._currentPoint = point;
 
         const magnitudes = vec2.subtract(v2(), this._initialPoint, this._currentPoint);
+        console.log(magnitudes);
         vec2.scale(magnitudes, magnitudes, window.devicePixelRatio * this._sensitivity);
 
         if (this._minAzimuth) {

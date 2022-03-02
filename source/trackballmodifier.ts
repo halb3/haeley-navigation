@@ -1,7 +1,7 @@
 
 /* spellchecker: disable */
 
-import { mat4, m4, quat, vec2, v2, vec3, v3 } from 'haeley-math';
+import { mat4, m4, quat, vec2, v2, vec3, v3 } from '@haeley/math';
 
 import { CameraModifier } from './cameramodifier';
 
