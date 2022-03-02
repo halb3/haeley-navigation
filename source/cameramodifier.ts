@@ -1,7 +1,7 @@
 
 /* spellchecker: disable */
 
-import { Camera, vec2 } from 'haeley-math';
+import { Camera, vec2 } from '@haeley/math';
 
 /* spellchecker: enable */
 

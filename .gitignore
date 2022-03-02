@@ -4,5 +4,6 @@ node_modules
 
 .nyc_output
 dist
+doc
 test-results
 haeley-navigation-*.tgz

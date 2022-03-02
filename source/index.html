@@ -5,7 +5,7 @@
 <head>
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-widthinitial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>undefined</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
         integrity="sha256-YvdLHPgkqJ8DVUxjjnGVlMMJtNimJ6dYkowFFvp4kKs=" crossorigin="anonymous">
@@ -24,7 +24,7 @@
         <div class="row justify-content-center">
             <div class="col-12 col-lg-8">
 
-                <h1>haeley-<strong>navigation</strong></h1>
+                <h1>@haeley/<strong>navigation</strong></h1>
                 <p class="lead">Test Page for Development</p>
                 <p>// about:
                     version <code id="version">version</code>,
@@ -99,17 +99,19 @@
     // import * as rxjs from 'rxjs';
     // window['rxjs'] = rxjs;
 
-    import * as auxiliaries from 'haeley-auxiliaries';
-    import * as math from 'haeley-math';
+    import * as auxiliaries from '@haeley/auxiliaries';
+    import * as math from '@haeley/math';
     import * as navigation from './index.ts';
     window['haeley'] = { auxiliaries, math, navigation };
+
+    console.log("'haeley' imported:", haeley);
 
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/rxjs@7.5.2/dist/bundles/rxjs.umd.min.js"
     integrity="sha256-NxoeMjr0m4GD4L8ovDR551WOTWUtH7cN8FaMZPboUhY=" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/webgl-operate@0.7.5/dist/webgl-operate.js"
-    integrity="sha256-ZOLw1iDpm8rAhJOXQOR5QwsWhzsbbVpk0c/SV/TYG5I=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/webgl-operate@0.8.0/dist/webgl-operate.js"
+    integrity="sha256-2AwTuW5EiTGBet5SRXBadRv7zP4xuihDQYn1Wlma6Cs=" crossorigin="anonymous"></script>
 <script>
     window.onload = () => {
 
@@ -118,8 +120,6 @@
         document.querySelector('#branch').innerHTML = haeley.navigation.branch();
         document.querySelector('#commit').innerHTML = haeley.navigation.commit();
         document.querySelector('#cryear').innerHTML = new Date().getFullYear();
-
-        console.log("'haeley-navigation' imported:", haeley);
 
         // initialize
         const canvas = new gloperate.Canvas('canvas');
@@ -344,14 +344,13 @@
         // onUpdate(): boolean
         onUpdate() {
             this._navigation.update();
-            return this._altered.any || this._camera.altered;
+            return this._altered.any || this._camera.altered();
         }
 
         // onPrepare(): void
         onPrepare() {
             if (this._altered.frameSize) {
                 this._intermediateFBO.resize(this._frameSize[0], this._frameSize[1]);
-                this._camera.viewport = this._canvasSize;
             }
             if (this._altered.canvasSize) {
                 this._camera.aspect = this._canvasSize[0] / this._canvasSize[1];
@@ -371,7 +370,7 @@
             this._accumulate.update();
 
             this._altered.reset();
-            this._camera.altered = false;
+            this._camera.altered(true);
         }
 
         // onFrame(): void
@@ -442,8 +441,10 @@
 
         // onSwap(): void
         onSwap() {
-            this._blit.framebuffer = this._accumulate.framebuffer ?
-                this._accumulate.framebuffer : this._intermediateFBO;
+            if (!this._accumulate.initialized || !this._accumulate.framebuffer.initialized) {
+                return;
+            }
+            this._blit.framebuffer = this._accumulate.framebuffer;
             this._blit.frame();
         }
 

@@ -1,8 +1,8 @@
 
 /* spellchecker: disable */
 
-import { Camera, vec2 } from 'haeley-math';
-import { log, LogLevel, Invalidate } from 'haeley-auxiliaries';
+import { Camera, vec2 } from '@haeley/math';
+import { log, LogLevel, Invalidate } from '@haeley/auxiliaries';
 
 import { PointerLock } from './pointerlock';
 import { EventProvider, EventHandler } from './eventhandler';

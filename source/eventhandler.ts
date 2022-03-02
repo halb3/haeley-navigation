@@ -3,8 +3,8 @@
 
 import { Observable, Subscription } from 'rxjs';
 
-import { assert, Invalidate } from 'haeley-auxiliaries';
-import { vec2 } from 'haeley-math';
+import { assert, Invalidate } from '@haeley/auxiliaries';
+import { vec2 } from '@haeley/math';
 
 // import { EyeGazeEvent } from './eyegazeevent.ts';
 // import { EyeGazeEventProvider } from './eyegazeeventprovider.ts';
